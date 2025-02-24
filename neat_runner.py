@@ -20,8 +20,9 @@ def run_game_with_net(game, net):
     fitness = 0
 
     stuck_counter = 0
-    max_stuck_frames = 50  # Number of frames to consider Pacman stuck
+    max_stuck_frames = 50 
     last_position = None
+    visited_positions = set()
 
     while game.game_state.running:
         game.game_state.current_time = pygame.time.get_ticks()
@@ -36,18 +37,25 @@ def run_game_with_net(game, net):
         dt = clock.tick(game.game_state.fps)
         dt /= 100
 
-        # Use the neural network to decide the direction
-        inputs = [game.game_state.pacman_rect[0], game.game_state.pacman_rect[1], 
-                  game.game_state.ghost_pos['blinky'][0], game.game_state.ghost_pos['blinky'][1]]
+      
+        inputs = [
+            game.game_state.pacman_rect[0], game.game_state.pacman_rect[1],
+            game.game_state.ghost_pos['blinky'][0], game.game_state.ghost_pos['blinky'][1]
+        ]
         output = net.activate(inputs)
         direction = ['l', 'r', 'u', 'd'][output.index(max(output))]
         game.game_state.direction = direction
 
-        # Update fitness based on game state
+    
         fitness += game.game_state.points
 
-        # Check if Pacman is stuck
+       
         current_position = (game.game_state.pacman_rect[0], game.game_state.pacman_rect[1])
+        if current_position not in visited_positions:
+            fitness += 1
+            visited_positions.add(current_position)
+
+        
         if current_position == last_position:
             stuck_counter += 1
         else:
@@ -55,11 +63,11 @@ def run_game_with_net(game, net):
         last_position = current_position
 
         if stuck_counter > max_stuck_frames:
-            fitness -= 10  # Penalize for being stuck
-            # Choose a random direction to try to get unstuck
+            fitness -= 10  
+            
             direction = random.choice(['l', 'r', 'u', 'd'])
             game.game_state.direction = direction
-            stuck_counter = 0  # Reset the stuck counter
+            stuck_counter = 0  
 
         if game.game_state.is_pacman_dead:
             break
@@ -76,7 +84,7 @@ def run_neat(config_file):
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     p.add_reporter(stats)
-    winner = p.run(eval_genomes, 50)
+    winner = p.run(eval_genomes, 100)  
     print('\nBest genome:\n{!s}'.format(winner))
 
 if __name__ == '__main__':

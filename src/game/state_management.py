@@ -4,7 +4,7 @@ class GameState:
     def __init__(self):
         self.__level = 1
         self.__running = True
-        self.__fps = 300 # Increase FPS to 300
+        self.__fps = 500 
         self.__direction = ""
         self.__current_time = None
         self.__pacman_rect = None
